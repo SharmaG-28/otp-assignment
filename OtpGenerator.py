@@ -1,71 +1,68 @@
-#Importing requires libraries
-import smtplib
-import random
+#Importing Libraries
 from twilio.rest import Client
+import random
+import smtplib
 
+# Constants
+SENDERS_EMAIL = 'sharmagautam2811@gmail.com'
+SENDERS_PASSWORD = 'purjnoylbryghwaz'
+TWILIO_ACCOUNT_SID = 'ACbe42830956f02da22e321dff91ab99f1'
+TWILIO_AUTH_TOKEN = '3f879200374cc6bfcca3e0617f86593e'
+TWILIO_NUMBER = '+17272314733'
 
+#Generating otp
+def generate_otp():
+    return random.randint(100000, 999999)
 
-#Sender's Email and Password
-senders_mail = 'sharmagautam2811@gmail.com'
-senders_password = 'purjnoylbryghwaz'
+#Validating email
+def validate_email(email):
+    return '@' in email and '.' in email
 
-#Sender's Mobile
-account_sid = 'ACbe42830956f02da22e321dff91ab99f1'
-auth_token = '3f879200374cc6bfcca3e0617f86593e'
-client = Client(account_sid, auth_token)
-twilio_num = '+17272314733'
-
-#Function to generate OTP
-def generateOtp():
-    otp = random.randint(100000, 999999)
-    return otp
-
-#Function to validate Email
-def validateEmailID(receiver_mail):
-    if "@" not in receiver_mail or "." not in receiver_mail:
-        return False
-    return True
-
-#Function to validate mobile
-def validateMobile(mobile):
+#Validating mobile number
+def validate_mobile(mobile):
     return len(mobile) == 10 and mobile.isdigit()
 
-# Send OTP over mobile using Twilio
-def sendOTPOverMobile(target, otp):
-    if(validateMobile(target)):
-        target = "+91" + str(target)
-        message = client.messages.create(
-            body = "Your OTP is " + str(otp) ,
-            from_= twilio_num,
-            to=target
-        )
-        print("OTP Sent to "+str(target)+" successfully")
-    else:
-        print("Enter valid mobile number!!")
-
-# Send OTP over email
-def sendOTPOverEmail(receiver_mail, otp):
-    message = 'Your otp is '+str(otp)
+#Sending otp over email
+def send_otp_over_email(receiver_email, otp):
+    message = 'Your OTP is ' + str(otp)
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
-    server.login(senders_mail, senders_password)
-    server.sendmail(senders_mail, receiver_mail, message)
+    server.login(SENDERS_EMAIL, SENDERS_PASSWORD)
+    server.sendmail(SENDERS_EMAIL, receiver_email, message)
     server.quit()
-    print("OTP sent sucessfully on ", receiver_mail)
+    print("OTP sent successfully to", receiver_email)
 
-#Main code
-print("\n\n*******************<< Otp Generator >>*************************")
-otp = generateOtp() #generating Otp
+#Sending otp over sms
+def send_otp_over_mobile(target, otp):
+    if validate_mobile(target):
+        target = "+91" + str(target)
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        message = client.messages.create(
+            body="Your OTP is " + str(otp),
+            from_=TWILIO_NUMBER,
+            to=target
+        )
+        print("OTP Sent to {} successfully".format(target))
+    else:
+        print("Enter a valid mobile number!")
 
-#Sending OTP over Email
-print("\nSending OTP via Email")
-receiver_mail  = input("Enter your Email: ")  #input user email
-if(validateEmailID(receiver_mail)):
-    sendOTPOverEmail(receiver_mail, otp)
-else:
-    print("Please Enter valid mail!!")
+#Main
+def main():
+    print("\n*******************<< OTP Generator >>*******************")
+    otp = generate_otp()
 
-#Sending OTP over SMS
-print("\nSending OTP via SMS")
-target = input("Enter Mobile number: ")
-sendOTPOverMobile(target, otp)
+    # Sending OTP over Email
+    print("\nSending OTP via Email")
+    receiver_email = input("Enter your Email: ")
+    if validate_email(receiver_email):
+        send_otp_over_email(receiver_email, otp)
+    else:
+        print("Please enter a valid email!")
+
+    # Sending OTP over SMS
+    print("\nSending OTP via SMS")
+    target_mobile = input("Enter Mobile number: ")
+    send_otp_over_mobile(target_mobile, otp)
+
+if __name__ == "__main__":
+    main()
